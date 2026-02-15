@@ -11,6 +11,8 @@ import android.net.Uri
 import android.net.VpnService
 import android.provider.Settings
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import java.io.FileInputStream
@@ -31,6 +33,7 @@ class PurityVpnService : VpnService() {
     private var vpnThread: Thread? = null
     private val running = AtomicBoolean(false)
     private val stopInProgress = AtomicBoolean(false)
+    @Volatile private var explicitStopRequested = false
 
     @Volatile private var lastRedirectAtMs = 0L
     @Volatile private var rapidBlockWindowStartMs = 0L
@@ -51,7 +54,10 @@ class PurityVpnService : VpnService() {
         Log.i("PurityGuard", "SERVICE_CMD action=$action")
         DebugLogStore.add("SERVICE_CMD", "action=$action")
         when (action) {
-            ACTION_STOP -> stopVpn("ACTION_STOP")
+            ACTION_STOP -> {
+                explicitStopRequested = true
+                stopVpn("ACTION_STOP")
+            }
             ACTION_DISABLE_PROTECTION -> {
                 Log.w("PurityGuard", "Direct disable action blocked; routing must occur via MainActivity flow")
             }
@@ -67,6 +73,7 @@ class PurityVpnService : VpnService() {
 
     private fun startVpn() {
         try {
+            explicitStopRequested = false
             if (!running.compareAndSet(false, true)) return
             stopInProgress.set(false)
 
@@ -549,7 +556,50 @@ class PurityVpnService : VpnService() {
 
     override fun onDestroy() {
         stopVpn("onDestroy")
+        maybeScheduleRestart("onDestroy")
         super.onDestroy()
+    }
+
+    override fun onRevoke() {
+        Log.w("PurityGuard", "VPN_REVOKED")
+        DebugLogStore.add("SERVICE", "onRevoke")
+        stopVpn("onRevoke")
+        maybeScheduleRestart("onRevoke")
+        super.onRevoke()
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        maybeScheduleRestart("onTaskRemoved")
+    }
+
+    private fun maybeScheduleRestart(reason: String) {
+        if (explicitStopRequested) return
+        val settings = SettingsStore(this)
+        if (!settings.isProtectionEnabled()) return
+
+        val prepIntent = VpnService.prepare(this)
+        if (prepIntent != null) {
+            Log.w("PurityGuard", "SKIP_AUTO_RESTART reason=$reason vpn_permission_missing")
+            DebugLogStore.add("SERVICE", "skip_restart reason=$reason vpn_permission_missing")
+            return
+        }
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            try {
+                val i = Intent(this, PurityVpnService::class.java).putExtra("action", "start")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(i)
+                } else {
+                    startService(i)
+                }
+                Log.i("PurityGuard", "AUTO_RESTART_SCHEDULED reason=$reason")
+                DebugLogStore.add("SERVICE", "auto_restart reason=$reason")
+            } catch (e: Exception) {
+                Log.e("PurityGuard", "AUTO_RESTART_FAILED reason=$reason", e)
+                DebugLogStore.add("ERROR", "auto_restart_failed reason=$reason ${e.message}")
+            }
+        }, 1200)
     }
 
     private fun ensureNotificationChannels() {
