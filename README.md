@@ -18,9 +18,8 @@ PurityGuard is an **Android adult-content blocker** that uses local VPN DNS enfo
   <img src="media/browser-notice.jpg" alt="Browser notice" width="220" />
 </p>
 
-## Downloads
-- Website: https://outcome.github.io/#purityguard
-- APK mirror: https://outcome.github.io/downloads/purityguard/
+## Download
+- https://github.com/outcome/PurityGuard/releases/latest
 
 ## Building from source
 This repo uses the normal Android/Gradle project structure.
