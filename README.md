@@ -9,18 +9,16 @@ PurityGuard is an Android DNS-based protection app focused on simple UX and reli
 - IPv6-aware DNS handling
 
 ## Screenshots
-
-![PurityGuard Home](media/home.jpg)
-
-![Blocked Screen](media/blocked.jpg)
-
-![Browser Block Notice](media/browser-notice.jpg)
+![Home](media/home.jpg)
+![Blocked](media/blocked.jpg)
+![Browser Notice](media/browser-notice.jpg)
 
 ## Downloads
-- Website: https://outcome.github.io/PurityGuard/
-- Latest release APK: https://outcome.github.io/downloads/purityguard/app-release.apk
+- Site: https://outcome.github.io/#purityguard
+- APK mirror: https://outcome.github.io/downloads/purityguard/
 
-## Source Layout
-- `app/` Android application module
-- Gradle-based Android build
+## Build
+```bash
+./gradlew assembleRelease assembleDebug
+```
 
