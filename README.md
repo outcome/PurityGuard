@@ -21,28 +21,46 @@ PurityGuard is an **Android adult-content blocker** that uses local VPN DNS enfo
 ## Download
 - https://github.com/outcome/PurityGuard/releases/latest
 
-## Building from source
-This repo uses the normal Android/Gradle project structure.
+## Build Guide (Windows)
 
-### Important files
-- `settings.gradle.kts` → declares project modules (includes `:app`)
-- `build.gradle.kts` → root Gradle configuration
-- `gradle.properties` → Gradle build options
-- `app/build.gradle.kts` → Android app module config (SDK/version/build types/dependencies)
+### 1) Install prerequisites
+- Install **Java 17** (JDK)
+- Install **Android SDK** (full SDK, not just `adb` from scrcpy)
+  - Easiest method: install Android Studio, then open **SDK Manager** and install:
+    - Android SDK Platform
+    - Android SDK Build-Tools
+    - Android SDK Platform-Tools
 
-### Build commands
-From repo root:
+### 2) Find your SDK path
+Typical SDK location on Windows:
 
-```bash
-./gradlew assembleRelease assembleDebug
+```text
+C:\Users\Administrator\AppData\Local\Android\Sdk
 ```
 
-On Windows:
+Your SDK root should contain folders like:
+- `platform-tools`
+- `build-tools`
+- `platforms`
 
-```powershell
-.\gradlew.bat assembleRelease assembleDebug
+### 3) Build from repo root
+Use the helper script with explicit SDK path:
+
+```bat
+gradle-build.bat C:\Users\Administrator\AppData\Local\Android\Sdk
 ```
 
-Output APKs:
-- `app/build/outputs/apk/release/`
-- `app/build/outputs/apk/debug/`
+If your SDK is elsewhere, replace that path with your actual SDK root.
+
+### 4) Output APKs
+After a successful build:
+- Release APK: `app\build\outputs\apk\release\app-release.apk`
+- Debug APK: `app\build\outputs\apk\debug\app-debug.apk`
+
+## Alternative build command (without helper script)
+```bat
+set "ANDROID_SDK_ROOT=C:\Users\Administrator\AppData\Local\Android\Sdk" && set "ANDROID_HOME=%ANDROID_SDK_ROOT%" && .\gradlew.bat assembleRelease assembleDebug
+```
+
+## Common issue
+If you get **"SDK location not found"**, your SDK path is wrong or incomplete. Make sure you point to the full Android SDK root (the folder that contains `platform-tools`, `build-tools`, and `platforms`).
