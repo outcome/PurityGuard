@@ -25,7 +25,7 @@ PurityGuard is an **Android adult-content blocker** that uses local VPN DNS enfo
 
 ### 1) Install prerequisites
 - Install **Java 17** (JDK)
-- Install **Android SDK** (full SDK, not just `adb` from scrcpy)
+- Install **Android SDK**
   - Easiest method: install Android Studio, then open **SDK Manager** and install:
     - Android SDK Platform
     - Android SDK Build-Tools
@@ -35,7 +35,7 @@ PurityGuard is an **Android adult-content blocker** that uses local VPN DNS enfo
 Typical SDK location on Windows:
 
 ```text
-C:\Users\Administrator\AppData\Local\Android\Sdk
+C:\Users\<USER>\AppData\Local\Android\Sdk
 ```
 
 Your SDK root should contain folders like:
@@ -47,7 +47,7 @@ Your SDK root should contain folders like:
 Use the helper script with explicit SDK path:
 
 ```bat
-gradle-build.bat C:\Users\Administrator\AppData\Local\Android\Sdk
+gradle-build.bat C:\PATH\TO\SDK
 ```
 
 If your SDK is elsewhere, replace that path with your actual SDK root.
@@ -59,7 +59,7 @@ After a successful build:
 
 ## Alternative build command (without helper script)
 ```bat
-set "ANDROID_SDK_ROOT=C:\Users\Administrator\AppData\Local\Android\Sdk" && set "ANDROID_HOME=%ANDROID_SDK_ROOT%" && .\gradlew.bat assembleRelease assembleDebug
+set "ANDROID_SDK_ROOT=C:\Users\<USER>\AppData\Local\Android\Sdk" && set "ANDROID_HOME=%ANDROID_SDK_ROOT%" && .\gradlew.bat assembleRelease assembleDebug
 ```
 
 ## Common issue
