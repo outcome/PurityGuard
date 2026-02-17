@@ -140,14 +140,30 @@ class PurityVpnService : VpnService() {
                         -1
                     }
 
-                    if (len <= 0) continue
+                    if (len <= 0) {
+                        // Fix for busy-loop CPU drain: wait briefly before retrying if read failed or returned empty
+                        try { Thread.sleep(100) } catch (_: InterruptedException) {}
+                        continue
+                    }
 
                     val version = (packet[0].toInt() ushr 4) and 0x0F
+
+                    // PERFORMANCE OPTIMIZATION: Fast-path drop for IPv6 non-DNS traffic.
+                    if (version == 6) {
+                        // IPv6 Next Header is at byte 6. 17 = UDP.
+                        val nextHeader = packet[6].toInt() and 0xFF
+                        if (nextHeader != 17) continue // Drop TCP/ICMP/etc immediately
+
+                        // Check for standard DNS port (53) at fixed offset 40 (standard IPv6 header size)
+                        if (len > 43) {
+                            val dstPort = ((packet[42].toInt() and 0xFF) shl 8) or (packet[43].toInt() and 0xFF)
+                            if (dstPort != 53) continue
+                        }
+                    }
 
                     val parsed = PacketParsers.parseDnsQuery(packet, len)
                     if (parsed == null) {
                         // 1. IPv6 Blackhole: Drop all NON-DNS IPv6 traffic for stability.
-                        // This forces the OS to use IPv4 for data where our bypass is 100% reliable.
                         if (version == 6) continue
 
                         // Unknown/parse-failure traffic should never be blocked.
@@ -660,7 +676,3 @@ class PurityVpnService : VpnService() {
         private const val GLOBAL_NOTIFICATION_MAX_PER_WINDOW = 3
     }
 }
-
-
-
-
